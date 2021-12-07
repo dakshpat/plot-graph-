@@ -1,0 +1,289 @@
+
+#include "TKey.h"
+#include "TStyle.h"
+#include "TLegend.h"
+#include "TLegend.h"
+#include "TObjString.h"
+#include "TFile.h"
+#include "TCanvas.h"
+#include "TVectorD.h"
+#include "TGraph.h"
+#include "TAxis.h"
+#include "TMultiGraph.h"
+#include <iostream>
+
+using namespace std;
+
+
+void MinimizeToZero(TGraph &gIn,double minChi2){
+  double x,y;
+  for(int i=0;i<gIn.GetN();i++){
+    gIn.GetPoint(i,x,y);
+    gIn.SetPoint(i,x,y-minChi2);
+  }
+}
+
+void ConvertAbsoluteToRelativeGraph(const TGraph &gIn,TGraph &gOut,double Scaling){
+  double x,y;
+  for(int i=0;i<gIn.GetN();i++){
+    gIn.GetPoint(i,x,y);
+    gOut.SetPoint(i,x/Scaling,y);
+  }
+}
+
+void usage(){
+  std::cout << "Example: PlotGraphs file.root outputfolder\n";
+  exit(1);
+}
+
+int main(int argc, char *argv[]){
+  
+  if(argc!=4) usage();
+  
+  gStyle->SetOptStat("");
+  TString inputFileName=argv[1];
+  TFile *inputFile=TFile::Open(inputFileName);
+  
+  TString inputFileName2=argv[2];
+  TFile *inputFile2=TFile::Open(inputFileName2);
+
+  // output ROOT file for saving plots
+  TString outFolder = argv[3];
+  outFolder.Append("/");
+  inputFileName.ReplaceAll(".root","");
+  TObjArray *objList=inputFileName.Tokenize("/");
+  inputFileName=((TObjString*)objList->Last())->GetString();
+  outFolder.Append(inputFileName);
+
+  inputFileName2.ReplaceAll(".root","");
+  TObjArray *objList2=inputFileName2.Tokenize("/");
+  inputFileName2=((TObjString*)objList2->Last())->GetString();
+  outFolder.Append(inputFileName2);
+  
+  TCanvas *c = new TCanvas("c","c",1200,1200);
+  c->SetGrid(1);
+  c->SetTicks(1);
+  
+  TString outFile(outFolder);
+
+   
+  Int_t colors[] = {kBlue+1,kRed,kGreen+1,kMagenta+1}; // #colors >= #levels - 1
+  Int_t contColors[] = {1,kGreen-5, kGreen-8,kGreen-10, kWhite}; // #colors >= #levels - 1
+  Int_t contColors2[] = {1,kRed-5, kRed-8,kRed-10, kWhite};
+  gStyle->SetPalette((sizeof(contColors)/sizeof(Int_t)), contColors);
+  TLegend *leg=new TLegend(0.8,0.8, 1, 1);  leg->SetBorderSize(0); leg->SetFillColorAlpha(kGray,0.7);
+
+ 
+  double U235Theo=6.69;
+  double U238Theo=10.10;
+  double P239Theo=4.40;
+  double P241Theo=6.03;
+ 
+  outFile.Append("2D58");
+  outFile.Append(".pdf");
+//---------------------------------------------------------------------------
+  TGraph *g1a=(TGraph*)inputFile->Get("U235_U238_1sigma");
+  TGraph *g2a=(TGraph*)inputFile->Get("U235_U238_2sigma");
+  TGraph *g3a=(TGraph*)inputFile->Get("U235_U238_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  TGraph *g1b=(TGraph*)inputFile2->Get("U235_U238_1sigma");
+  TGraph *g2b=(TGraph*)inputFile2->Get("U235_U238_2sigma");
+  TGraph *g3b=(TGraph*)inputFile2->Get("U235_U238_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(5);
+  g2b->SetLineWidth(5);
+  g3b->SetLineWidth(5);
+  g1b->SetLineStyle(9);
+  g2b->SetLineStyle(9);
+  g3b->SetLineStyle(9); 
+  g3b->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+
+  leg->AddEntry(g1a, inputFileName,"F");
+  leg->AddEntry(g1b, inputFileName2,"F");
+
+  leg-> Draw();
+
+  c->Print(outFile);
+  
+  //---------------------------------------------------------------------
+  g1a=(TGraph*)inputFile->Get("U235_P239_1sigma");
+  g2a=(TGraph*)inputFile->Get("U235_P239_2sigma");
+  g3a=(TGraph*)inputFile->Get("U235_P239_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  g1b=(TGraph*)inputFile2->Get("U235_P239_1sigma");
+  g2b=(TGraph*)inputFile2->Get("U235_P239_2sigma");
+  g3b=(TGraph*)inputFile2->Get("U235_P239_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(8);
+  g2b->SetLineWidth(8);
+  g3b->SetLineWidth(8);
+  g1b->SetLineStyle(9);
+  g2b->SetLineStyle(9);
+  g3b->SetLineStyle(9);
+  g3b->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+  outFile.ReplaceAll("2D58","2D59");
+
+  leg-> Draw();
+ 
+  c->Print(outFile);
+ 
+  //-----------------------------------------------------------------------------
+  g1a=(TGraph*)inputFile->Get("U235_P241_1sigma");
+  g2a=(TGraph*)inputFile->Get("U235_P241_2sigma");
+  g3a=(TGraph*)inputFile->Get("U235_P241_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  g1b=(TGraph*)inputFile2->Get("U235_P241_1sigma");
+  g2b=(TGraph*)inputFile2->Get("U235_P241_2sigma");
+  g3b=(TGraph*)inputFile2->Get("U235_P241_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(5);
+  g2b->SetLineWidth(5);
+  g3b->SetLineWidth(5);
+  g1b->SetLineStyle(9);
+  g2b->SetLineStyle(9);
+  g3b->SetLineStyle(9); 
+  g3b->GetXaxis()->SetTitle("#sigma_{235} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+  outFile.ReplaceAll("2D59","2D51");
+  leg -> Draw();
+  c->Print(outFile);
+  
+  //--------------------------------------------------------------------------
+
+  g1a=(TGraph*)inputFile->Get("U238_P239_1sigma");
+  g2a=(TGraph*)inputFile->Get("U238_P239_2sigma");
+  g3a=(TGraph*)inputFile->Get("U238_P239_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  g1b=(TGraph*)inputFile2->Get("U238_P239_1sigma");
+  g2b=(TGraph*)inputFile2->Get("U238_P239_2sigma");
+  g3b=(TGraph*)inputFile2->Get("U238_P239_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(5);
+  g2b->SetLineWidth(5);
+  g3b->SetLineWidth(5);
+  g3b->GetXaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+  outFile.ReplaceAll("2D51","2D89");
+  leg -> Draw();
+  c->Print(outFile);
+
+  //-----------------------------------------------------------------------
+
+  g1a=(TGraph*)inputFile->Get("U238_P241_1sigma");
+  g2a=(TGraph*)inputFile->Get("U238_P241_2sigma");
+  g3a=(TGraph*)inputFile->Get("U238_P241_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  g1b=(TGraph*)inputFile2->Get("U238_P241_1sigma");
+  g2b=(TGraph*)inputFile2->Get("U238_P241_2sigma");
+  g3b=(TGraph*)inputFile2->Get("U238_P241_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(5);
+  g2b->SetLineWidth(5);
+  g3b->SetLineWidth(5);
+  g1b->SetLineStyle(9);
+  g2b->SetLineStyle(9);
+  g3b->SetLineStyle(9); 
+  g3b->GetXaxis()->SetTitle("#sigma_{238} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+  outFile.ReplaceAll("2D89","2D81");
+  leg -> Draw();
+  c->Print(outFile);
+
+ //-------------------------------------------------------------------
+ 
+  g1a=(TGraph*)inputFile->Get("P239_P241_1sigma");
+  g2a=(TGraph*)inputFile->Get("P239_P241_2sigma");
+  g3a=(TGraph*)inputFile->Get("P239_P241_3sigma");
+  g1a->SetFillColor(contColors[1]);
+  g2a->SetFillColor(contColors[2]);
+  g3a->SetFillColor(contColors[3]);
+  g3a->GetXaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3a->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3a->Draw("AFC");
+  g2a->Draw("FC");
+  g1a->Draw("FC");
+  g1b=(TGraph*)inputFile->Get("P239_P241_1sigma");
+  g2b=(TGraph*)inputFile->Get("P239_P241_2sigma");
+  g3b=(TGraph*)inputFile->Get("P239_P241_3sigma");
+  g1b->SetLineColor(contColors2[1]);
+  g2b->SetLineColor(contColors2[2]);
+  g3b->SetLineColor(contColors2[3]);
+  g1b->SetLineWidth(5);
+  g2b->SetLineWidth(5);
+  g3b->SetLineWidth(5);
+  g1b->SetLineStyle(9);
+  g2b->SetLineStyle(9);
+  g3b->SetLineStyle(9); 
+  g3b->GetXaxis()->SetTitle("#sigma_{239} [10^{-43}cm^{2}/fission]");
+  g3b->GetYaxis()->SetTitle("#sigma_{241} [10^{-43}cm^{2}/fission]");
+  g3b->Draw("C");
+  g2b->Draw("C");
+  g1b->Draw("C");
+  outFile.ReplaceAll("2D81","2D91");
+  leg -> Draw(); 
+  c->Print(outFile);
+    return 0;
+}
